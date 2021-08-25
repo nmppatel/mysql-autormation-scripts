@@ -1,0 +1,47 @@
+MYSQL AUTOMATION SCRIPTS TO FIND REFERENCING TABLES, VIEWS AND STORE PROCEDURES
+
+Find the reference Tables using column name
+------------------------------------------------------------------------------------------------------------------------------------
+SELECT 
+  TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME
+FROM
+  INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+WHERE
+  REFERENCED_TABLE_SCHEMA = 'Schema Name/DB name' AND
+  REFERENCED_TABLE_NAME = 'Table Name' And
+    REFERENCED_COLUMN_NAME = 'Column ID';
+ 
+Find views reference to table
+---------------------------------------------------------------------------------------------------------------------------------------
+ 
+SELECT TABLE_NAME FROM information_schema.VIEWS 
+WHERE table_schema = 'SSS_Core' 
+AND view_definition LIKE '%my_aspnet_users%';
+ 
+ 
+Find Store Procedure reference to table
+--------------------------------------------------------------------------------------------------------------------------------------
+select routine_name as type 
+from information_schema.ROUTINES 
+where ROUTINE_DEFINITION like '%my_aspnet_users%' 
+and ROUTINE_SCHEMA like  '%SSS_Core%'; 
+ 
+ 
+ 
+Reference tables column drop and add foreign key reference
+--------------------------------------------------------------------------------------------------------------------------------------
+ 
+SELECT
+CONCAT('ALTER TABLE `' ,rc.TABLE_NAME,
+    '` DROP FOREIGN KEY `' ,rc.CONSTRAINT_NAME,'`;\n
+ALTER TABLE `' ,rc.TABLE_NAME,
+    '` ADD CONSTRAINT `' ,rc.CONSTRAINT_NAME ,'` FOREIGN KEY (`',kcu.COLUMN_NAME,
+    '`) REFERENCES `',kcu.REFERENCED_TABLE_NAME,'` (`',kcu.REFERENCED_COLUMN_NAME,'`) ON DELETE CASCADE;') as user_id_foreignkey
+ 
+FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+LEFT OUTER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+    ON kcu.TABLE_SCHEMA = rc.CONSTRAINT_SCHEMA
+    AND kcu.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
+WHERE DELETE_RULE = 'NO ACTION'
+AND rc.CONSTRAINT_SCHEMA = 'SSS_Core' and kcu.REFERENCED_TABLE_NAME ='AspNetUsers'
+
